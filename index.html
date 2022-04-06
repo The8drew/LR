@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lorenz Attractor</title>
+    <link rel="icon" href="l.png">
+    <style>
+        * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        body{
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        let sigma = 10;
+        let rho = 28;
+        let beta = 8/3;
+        //parameters
+        let time = 0.002;
+        let scale = 9;
+
+        let tails = true;
+        let tails_lenght = 4;
+
+        let max_amount = 1200;
+
+        let color_list = [
+        "#ff0546",
+        "#9c173b",
+        "#660f31",
+        "#450327",
+        "#270022",
+        "#17001d",
+        "#09010d",
+        "#0ce6f2",
+        "#0098db",
+        "#1e579c"
+        ]
+
+        //selection-----------------------------------------
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
+        let centery = canvas.height / 2;
+        let centerx = canvas.width / 2;
+
+        canvas.style.setProperty("background-color","#171420"); //here is the background color 
+
+        window.addEventListener("resize", () => {
+                canvas.height = window.innerHeight;
+                canvas.width = window.innerWidth;
+                centery = canvas.height / 2;
+                centerx = canvas.width / 2;
+        })
+
+        pressed = false
+        document.onmousedown = () => {
+                pressed = true
+            }
+        document.onmouseup = () => {
+            pressed = !pressed
+        }
+
+        canvas.addEventListener("mousemove", ((e) => {
+            mx = (e.clientX - centerx) / scale 
+            my = (e.clientY - centery) / scale 
+            if (pressed) {
+                draw(mx, my)
+            }
+        }))
+
+
+        class ball {
+        constructor(x, y, z, size, color) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.size = size;
+            this.color = color;
+            this.list = [];
+            }
+
+            upball(){
+            this.list.push({x:this.x, y:this.y});
+            if (this.list.length > tails_lenght){
+                this.list.shift();
+            }
+            let dy = (this.x * (rho - this.z) - this.y) * time;
+            let dx = (sigma * (this.y - this.x)) * time;
+            let dz = (this.x * this.y - beta * this.z) * time;
+            this.x += dx
+            this.y += dy
+            this.z += dz
+            }
+
+            drawball() {
+                ctx.beginPath();
+                ctx.arc(this.x * scale + centerx, this.y * scale + centery, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            drawLine(){
+                ctx.beginPath();
+                this.list.forEach(b => {
+                    ctx.lineTo(b.x * scale + centerx, b.y * scale + centery);
+                });
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = this.color;
+                ctx.stroke();
+            }
+
+            combine(){
+                //this.drawball();
+                if (tails) {
+                    this.drawLine();
+                }
+                this.upball();
+            }
+        }
+
+
+        const array = [];
+
+        let count = 20;
+
+        function create(a){
+            for(let i = 0; i < a; i++){
+            array.push(new ball(Math.random()*200-100, Math.random()*200-100, /*Math.random()*200-100*/0, 4, color_list[Math.floor(Math.random()*(color_list.length))]));
+            };
+        };
+        create(count);
+
+        function draw(x, y){
+            array.push(new ball(x, y, /*Math.random()*200-100*/0, 4, color_list[Math.floor(Math.random()*(color_list.length))]));
+        }
+
+        function update() {
+            ctx.clearRect(0,0 ,canvas.width, canvas.height);
+            //while loop}
+            if (array.length > max_amount){
+                array.shift()
+            }
+            
+            array.forEach( x => {
+                x.combine();
+            });
+            //while loop
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
